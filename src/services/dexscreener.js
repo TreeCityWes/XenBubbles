@@ -1,28 +1,31 @@
 const BASE_URL = 'https://api.dexscreener.com/latest';
 
-export const fetchTokenData = async (contractAddress) => {
+export const fetchTokenData = async (chain, contractAddress) => {
   try {
     const response = await fetch(`${BASE_URL}/dex/tokens/${contractAddress}`);
     const data = await response.json();
     
     if (data.pairs && data.pairs.length > 0) {
-      // Get the most liquid pair
-      const mainPair = data.pairs[0];
-      const baseToken = mainPair.baseToken;
+      const chainPair = data.pairs.find(pair => pair.chainId.toLowerCase() === chain.toLowerCase()) || data.pairs[0];
+      const baseToken = chainPair.baseToken;
       
       return {
-        price: mainPair.priceUsd,
-        priceChange24h: mainPair.priceChange?.h24,
-        volume24h: mainPair.volume?.h24,
-        liquidity: mainPair.liquidity?.usd,
-        marketCap: mainPair.marketCap,
-        fdv: mainPair.fdv,
-        imageUrl: baseToken.info?.imageUrl || mainPair.info?.imageUrl,
-        dexId: mainPair.dexId,
-        pairAddress: mainPair.pairAddress,
-        websites: mainPair.info?.websites,
-        socials: mainPair.info?.socials,
-        color: getColorFromPriceChange(mainPair.priceChange?.h24)
+        symbol: baseToken.symbol,
+        chain: chain,
+        chainId: chainPair.chainId,
+        contract: contractAddress,
+        price: chainPair.priceUsd,
+        priceChange24h: chainPair.priceChange?.h24,
+        volume24h: chainPair.volume?.h24,
+        liquidity: chainPair.liquidity?.usd,
+        marketCap: chainPair.marketCap,
+        fdv: chainPair.fdv,
+        imageUrl: baseToken.logoURI || chainPair.info?.imageUrl,
+        dexId: chainPair.dexId,
+        pairAddress: chainPair.pairAddress,
+        websites: chainPair.info?.websites,
+        socials: chainPair.info?.socials,
+        color: getColorFromPriceChange(chainPair.priceChange?.h24)
       };
     }
     
